@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir pyarrow shapely "pystac[validation]"
+
+WORKDIR /app
+COPY build_geo_catalog.py /app/
+
+ENTRYPOINT ["python", "/app/build_geo_catalog.py"]
+
