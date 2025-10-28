@@ -92,24 +92,90 @@ PARTITION_COLS=""
 REGISTER_TABLE=false
 GEOMETRY_COLUMN="geometry"
 
-SHORTOPTS=""
-LONGOPTS="db-name:,bucket-name:,output-prefix:,output-table:,partition-cols:,register-table,geometry-column:,profile:,region:,log-dir:,help"
-PARSED=$(getopt --options="$SHORTOPTS" --longoptions="$LONGOPTS" --name "$0" -- "$@") || { usage; exit 2; }
-eval set -- "$PARSED"
-while true; do
+LOG_DIR=""
+
+require_value() {
+  local opt="$1"
+  local val="$2"
+  case "$val" in
+    ""|--*)
+      echo "Missing argument for ${opt}" >&2
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+while [ $# -gt 0 ]; do
   case "$1" in
-    --db-name) DB_NAME="$2"; shift 2;;
-    --bucket-name) BUCKET_NAME="$2"; shift 2;;
-    --output-prefix) OUTPUT_PREFIX="$2"; shift 2;;
-    --output-table) OUTPUT_TABLE="$2"; shift 2;;
-    --partition-cols) PARTITION_COLS="$2"; shift 2;;
-    --geometry-column) GEOMETRY_COLUMN="$2"; shift 2;;
-    --register-table) REGISTER_TABLE=true; shift;;
-    --profile) PROFILE="$2"; shift 2;;
-    --region) REGION="$2"; shift 2;;
-    --log-dir) LOG_DIR="$2"; shift 2;;
-    --help) usage; exit 0;;
-    --) shift; break;;
+    --db-name)
+      require_value "$1" "${2:-}"
+      DB_NAME="$2"
+      shift 2
+      ;;
+    --bucket-name)
+      require_value "$1" "${2:-}"
+      BUCKET_NAME="$2"
+      shift 2
+      ;;
+    --output-prefix)
+      require_value "$1" "${2:-}"
+      OUTPUT_PREFIX="$2"
+      shift 2
+      ;;
+    --output-table)
+      require_value "$1" "${2:-}"
+      OUTPUT_TABLE="$2"
+      shift 2
+      ;;
+    --partition-cols)
+      require_value "$1" "${2:-}"
+      PARTITION_COLS="$2"
+      shift 2
+      ;;
+    --geometry-column)
+      require_value "$1" "${2:-}"
+      GEOMETRY_COLUMN="$2"
+      shift 2
+      ;;
+    --profile)
+      require_value "$1" "${2:-}"
+      PROFILE="$2"
+      shift 2
+      ;;
+    --region)
+      require_value "$1" "${2:-}"
+      REGION="$2"
+      shift 2
+      ;;
+    --log-dir)
+      require_value "$1" "${2:-}"
+      LOG_DIR="$2"
+      shift 2
+      ;;
+    --register-table)
+      REGISTER_TABLE=true
+      shift
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+    *)
+      # Unexpected positional argument
+      echo "Unexpected positional argument: $1" >&2
+      usage
+      exit 1
+      ;;
   esac
 done
 
