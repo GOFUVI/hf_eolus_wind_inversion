@@ -204,7 +204,7 @@ ROLE_ARN=""
 IMAGE_URI=""
 INSTANCE_TYPE="ml.m5.large"
 VOLUME_SIZE="10"
-MAX_RUNTIME="3600"
+MAX_RUNTIME="7200"
 # Whether to clean existing local logs for job base name (true/false)
 CLEAN_LOGS="true"
 SEED=""

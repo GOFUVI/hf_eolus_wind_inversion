@@ -84,6 +84,20 @@ mkdir -p \
     --region example-region-1
   echo ">>> Completed maintenance tables at $(date) <<<"
 
+  echo ">>> Applying 10 m wind speed correction to raw reference-buoy measurements at $(date) <<<"
+  bash ./scripts/aggregation/apply_buoy_wind_height_correction.sh \
+    --source wind_training.REFERENCE_BUOY \
+    --target-table wind_training.REFERENCE_BUOY_HEIGHT10M \
+    --s3-output s3://project-bucket-placeholder/training/reference_buoy_height10m/ \
+    --results-s3 s3://project-bucket-placeholder/athena-query-results/ \
+    --source-height 3 \
+    --target-height 10 \
+    --roughness-length 0.0002 \
+    --profile example-profile \
+    --region example-region-1 \
+    --log-dir artifacts_root/pivot_and_join/logs
+  echo ">>> Completed raw reference-buoy correction at $(date) <<<"
+
   echo ">>> Joining pivoted tables at $(date) <<<"
   ./scripts/aggregation/join_pivoted_tables.sh \
     --source wind_training.RADAR_A_PIVOT_FEATURES_MAINT \
@@ -91,7 +105,7 @@ mkdir -p \
     --union-out wind_training.PIVOTS_JOINED@s3://project-bucket-placeholder/training/pivots/joined/ \
     --sar wind_training.SAR_AGGREGATED \
     --sar-out wind_training.PIVOTS_SAR@s3://project-bucket-placeholder/training/pivots/with_sar/ \
-    --buoy wind_training.REFERENCE_BUOY \
+    --buoy wind_training.REFERENCE_BUOY_HEIGHT10M \
     --buoy-out wind_training.PIVOTS_REFERENCE_BUOY@s3://project-bucket-placeholder/training/pivots/with_reference_buoy/ \
     --profile example-profile \
     --region example-region-1 \
