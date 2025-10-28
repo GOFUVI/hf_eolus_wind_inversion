@@ -176,6 +176,7 @@ Preparation steps (chronological, excluding GeoParquet/STAC):
 - Pivot aggregated station tables to wide form by Bragg peak (two peaks), validating unique geometry per node.
 - Add station bearing and distance features to the pivoted tables (per station coordinates to grid cell).
 - Attach maintenance‑interval identifiers per station to enable interval‑stratified normalization downstream.
+- Standardise the reference-buoy wind speed to a canonical 10 m height by invoking `scripts/aggregation/apply_buoy_wind_height_correction.sh`, which materialises a corrected buoy table while preserving the raw measurements for provenance.
 - Join pivoted station tables and derive domain‑specific pivot views (e.g., SAR‑linked pivots; buoy‑linked pivots) under a unified schema.
 - Stratify pivots into train/test (and optional CV folds) with deterministic hashing, preserving range‑class and wind‑bin distributions.
 - Create partition‑specific filtered views for “valid wind” and annotate per‑partition source metadata where applicable.
@@ -226,6 +227,8 @@ To avoid column collisions and retain provenance, all non-key columns are carrie
 After consolidating the station pivots (the joined pivots), the pipeline optionally attaches external supervision sources to produce domain-specific pivot views:
 - SAR-linked pivots: join the joined station table with the SAR aggregation table. The join condition uses `timestamp` and `node_id`, and includes `geometry` if present in the SAR table. Columns are prefixed under the `sar__` namespace to prevent clashes.
 - Buoy-linked pivots: join the joined station table with the buoy observations, likewise on `timestamp` and `node_id` (and `geometry` if available). Columns are prefixed under the `buoy__` namespace.
+
+Prior to the buoy join, the workflow standardises in-situ winds to a common 10 m reference by running `scripts/aggregation/apply_buoy_wind_height_correction.sh`. The helper evaluates a neutral logarithmic wind profile with configurable source height, target height, and roughness length, writing a corrected buoy table that preserves the original measurements alongside the height-adjusted winds. This guarantees that cross-domain comparisons and fine-tuning exercises operate on buoy winds aligned with the SAR reference level while keeping provenance intact.
 
 Because SAR acquisitions and buoy measurements are asynchronous relative to HF-Radar snapshots, these joins naturally yield sparser matched sets than the station-only consolidation. This is intentional: it ensures that evaluation on SAR- or buoy-referenced targets is based on temporally co-located samples rather than on interpolations. Subsequent steps create filtered “valid wind” views and later harmonize target names and units for the combined SAR+buoy training/testing workflow.
 
